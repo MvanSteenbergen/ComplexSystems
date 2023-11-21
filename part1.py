@@ -15,38 +15,52 @@ def loadData(network):
         return G
     else: return
 
-G = loadData("git")
-
-counts = np.array(nx.degree_histogram(G))
-unique = np.arange(0,len(counts))
-#Note that the network is undirected, but if we have edge (a,b) we do not have edge (b,a) in the data.
-
-#Converting the number of degrees to frequency
-#unique, counts = np.unique(degrees, return_counts=True)
-
-fraction = counts/len(list(G.nodes))
-
-
-"""
-#Fitting a power law
 def powerLaw(k, c, gamma):
     return c*k**(-gamma)
 
-#We want to fit the power law only to the tail
-tail = 10
-uniqueTail = unique[unique >= tail]
-fractionTail = fraction[unique >= tail]
-popt, pcov = curve_fit(powerLaw, uniqueTail, fractionTail)
-"""
+def fitter(unique, tail):
+    #We want to fit the power law only to the tail
+    uniqueTail = unique[unique >= tail]
+    fractionTail = fraction[unique >= tail]
+    popt, pcov = curve_fit(powerLaw, uniqueTail, fractionTail)
+    return popt, uniqueTail, fractionTail
 
-#Plotting the degree distribution and the fit
-plt.title('Degree distribution plot')
-plt.scatter(unique, fraction, marker='.')
-#plt.plot(uniqueTail, powerLaw(uniqueTail, *popt), c='r')
-plt.xscale('log')
-plt.xlabel('$k$')
-plt.yscale('log')
-plt.ylabel('$p_k$')
-plt.grid()
-plt.savefig('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/plots/loglogroads.pdf')
-plt.show()
+def plotter(G, fit, scale, network):
+    counts = np.array(nx.degree_histogram(G))
+    unique = np.arange(0,len(counts))
+    fraction = counts/len(list(G.nodes))
+    plt.title('Degree distribution plot')
+    plt.scatter(unique, fraction, marker='.')
+    plt.xlabel('$k$')
+    plt.ylabel('$p_k$')
+    plt.grid()
+
+    if scale == "log":
+        plt.xscale('log')
+        plt.yscale('log')
+
+    if fit:
+        popt, uniqueTail, fractionTail = fitter(unique, 10)
+        plt.plot(uniqueTail, powerLaw(uniqueTail, *popt), c='r')
+
+    if scale == "log":
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.savefig('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/plots/loglog'+str(network)+'.pdf')
+    else: plt.savefig('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/plots/'+str(network)+'.pdf')
+    plt.show()
+
+network = "roads"
+G = loadData(network)
+#plotter(G, False, 'log', network)
+
+
+#Create a sparse representation of the adjacency matrix
+A = nx.adjacency_matrix(G)
+A3 = A**3
+print("done")
+
+#Now compute the clustering coefficient
+#Ci = 2*(#triangles with vertex in i)/(ki(ki-1))
+#Where (#triangles with vertex in i) = A^3[i,i]/2
+#So Ci = A^3[i,i]/(ki(ki-1))
