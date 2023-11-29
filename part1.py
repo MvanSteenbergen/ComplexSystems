@@ -11,11 +11,17 @@ import scipy.special
 
 #Loading in the data.
 def loadData(network):
-    if (network == "git"):
+    if (network == "Git"):
         G = nx.read_edgelist('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataGit/musae_git_edges.csv', delimiter=',', nodetype=int)
         return G
-    elif(network == "roads"):
+    elif(network == "Roads"):
         G = nx.read_edgelist('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataRoads/roadNet-PA.txt', nodetype=int)
+        return G
+    elif (network == "Arxiv"):
+        G = nx.read_edgelist('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataArxiv/ca-GrQc.txt', nodetype=int)
+        return G
+    elif (network == "Enron"):
+        G = nx.read_edgelist('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataEnron/email-Enron.txt', nodetype=int)
         return G
     else: return
 
@@ -36,7 +42,7 @@ def plotter(G, fit, scale, network):
     counts = np.array(nx.degree_histogram(G))
     unique = np.arange(0,len(counts))
     fraction = counts/len(list(G.nodes))
-    plt.title('Degree distribution plot')
+    plt.title('Degree distribution plot of '+str(network))
     plt.scatter(unique, fraction, marker='.')
     plt.xlabel('$k$')
     plt.ylabel('$p_k$')
@@ -49,39 +55,19 @@ def plotter(G, fit, scale, network):
     if scale == "log":
         plt.xscale('log')
         plt.yscale('log')
-        #plt.savefig('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/plots/loglog'+str(network)+'.pdf')
+        plt.savefig('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/plots/loglog'+str(network)+'.pdf')
     else: plt.savefig('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/plots/'+str(network)+'.pdf')
-    #plt.show()
-
-network = "roads"
-G = loadData(network)
-#plotter(G, False, 'log', network)
-
-#Create a sparse representation of the adjacency matrix
-
-def findDiagonal(G):
-    x = list(G.nodes)
-    x.sort()
-    A = nx.adjacency_matrix(G, nodelist=x)
-    A2 = sparse.csr_matrix.dot(A, A)
-    A3 = sparse.csr_matrix.dot(A, A2)
-    A3_diag = A3.diagonal()
-    np.savetxt('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataRoads/A3_diag.txt', np.array(A3_diag))
-    print('done')
-
-findDiagonal(G)
-
-#Now compute the clustering coefficient
-#Ci = 2*(#triangles with vertex in i)/(ki(ki-1))
-#Where (#triangles with vertex in i) = A^3[i,i]/2
-#So Ci = A^3[i,i]/(ki(ki-1))
-
-A3_diag = np.loadtxt('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataRoads/A3_diag.txt')
+    plt.clf()
 
 def C(i,j):
     k = G.degree(j)
     if k==0 or k==1: return 0
     else: return A3_diag[i]/(k*(k-1))
+
+#Now compute the clustering coefficient
+#Ci = 2*(#triangles with vertex in i)/(ki(ki-1))
+#Where (#triangles with vertex in i) = A^3[i,i]/2
+#So Ci = A^3[i,i]/(ki(ki-1))
 
 def C_av():
     l = len(nx.degree(G))
@@ -92,12 +78,31 @@ def C_av():
         clustering_sum += C(i,j)
     return clustering_sum/l
 
+def findDiagonal(G):
+    x = list(G.nodes)
+    x.sort()
+    A = nx.adjacency_matrix(G, nodelist=x)
+    A2 = sparse.csr_matrix.dot(A, A)
+    A3 = sparse.csr_matrix.dot(A, A2)
+    A3_diag = A3.diagonal()
+    np.savetxt('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/data'+str(network)+'/A3_diag.txt', np.array(A3_diag))
+    print('done')
+
+for network in ["Git", "Roads", "Arxiv", "Enron"]:
+    G = loadData(network)
+    plotter(G, False, 'log', network)
+
+"""
+findDiagonal(G)
+
+A3_diag = np.loadtxt('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/data'+str(network)+'/A3_diag.txt')
+
 x = C_av()
 print("average clustering using our function = " + str(x))
 
 x = nx.average_clustering(G)
 print("average clustering using build in function = " + str(x))
-"""
+
 random_int = random.randint(0, len(nx.degree(G))-1)
 average_deg_random = nx.average_neighbor_degree(G, nodes=[random_int])[random_int]
 
