@@ -8,6 +8,7 @@ import networkx as nx
 import random
 import scipy.special
 
+
 #Loading in the data.
 def loadData(network):
     if (network == "git"):
@@ -52,39 +53,51 @@ def plotter(G, fit, scale, network):
     else: plt.savefig('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/plots/'+str(network)+'.pdf')
     #plt.show()
 
-network = "git"
+network = "roads"
 G = loadData(network)
 #plotter(G, False, 'log', network)
 
 #Create a sparse representation of the adjacency matrix
-A = nx.adjacency_matrix(G)
-A3 = A**3
 
+def findDiagonal(G):
+    x = list(G.nodes)
+    x.sort()
+    A = nx.adjacency_matrix(G, nodelist=x)
+    A2 = sparse.csr_matrix.dot(A, A)
+    A3 = sparse.csr_matrix.dot(A, A2)
+    A3_diag = A3.diagonal()
+    np.savetxt('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataRoads/A3_diag.txt', np.array(A3_diag))
+    print('done')
+
+findDiagonal(G)
 
 #Now compute the clustering coefficient
 #Ci = 2*(#triangles with vertex in i)/(ki(ki-1))
 #Where (#triangles with vertex in i) = A^3[i,i]/2
 #So Ci = A^3[i,i]/(ki(ki-1))
 
-def C(i):
-    k = np.array(nx.degree(G))[i][1]
-    if k==0 or k==1: return 0
-    else: return A3[i,i]/(k*(k-1))
+A3_diag = np.loadtxt('/home/melle/OneDrive/Master/Year1/ComplexSystems/Project2/dataRoads/A3_diag.txt')
 
+def C(i,j):
+    k = G.degree(j)
+    if k==0 or k==1: return 0
+    else: return A3_diag[i]/(k*(k-1))
 
 def C_av():
+    l = len(nx.degree(G))
+    x = list(G.nodes)    
+    x.sort()
     clustering_sum = 0.0
-    for i in range(len(nx.degree(G))-1):
-        clustering_sum += C(i)
-        if i%1000==0: print(i)
-    return clustering_sum/len(nx.degree(G))
+    for i, j in enumerate(x):
+        clustering_sum += C(i,j)
+    return clustering_sum/l
 
-x = nx.clustering(G)
-print("average clustering using build in function = " + str(np.mean(list(x.values()))))
 x = C_av()
 print("average clustering using our function = " + str(x))
 
-
+x = nx.average_clustering(G)
+print("average clustering using build in function = " + str(x))
+"""
 random_int = random.randint(0, len(nx.degree(G))-1)
 average_deg_random = nx.average_neighbor_degree(G, nodes=[random_int])[random_int]
 
@@ -100,7 +113,7 @@ print("average_degree = "+str(average_deg))
 counts = np.array(nx.degree_histogram(G))
 unique = np.arange(0,len(counts))
 fraction = counts/len(list(G.nodes))
-
+"""
 
 
 
