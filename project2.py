@@ -97,7 +97,7 @@ def diagGen(networks):
 #Declare networks we want to use
 networks = ["Git", "Roads", "Arxiv", "Enron"]
 
-#Generate the diagonal matrix of A^3
+#Generate the diagonal matrix of A^3, please do this only once to save computation time.
 #diagGen(networks)
 
 #Loop over the networks
