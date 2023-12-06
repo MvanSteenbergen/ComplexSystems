@@ -131,9 +131,15 @@ print("average_degree = "+str(average_deg))
 neighbor_degrees = list(nx.average_neighbor_degree(G).values())
 print(np.average(neighbor_degrees))
 
-# -------------------- MAAS THIS IS THE DATA FOR THE PLOTS ---------------------------
-"""
-counts = np.array(nx.degree_histogram(G))
-unique = np.arange(0,len(counts))
-fraction = counts/len(list(G.nodes))
-"""
+# Calculate ML-estimate for λ and the Kolmogorv-Smirnov statistic
+def calculateKS(G):
+    
+    degree_list = [G.degree[i] for i in G.nodes]
+    ml_lambda = np.mean(degree_list)
+    print(ml_lambda)
+    expected = stats.poisson.rvs(size = len(degree_list), mu = ml_lambda)
+    
+    print(stats.kstest(degree_list, expected))
+
+for i in ["Git", "Roads"]:
+    calculateKS(loadData(i))
